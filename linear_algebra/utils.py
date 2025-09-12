@@ -17,6 +17,12 @@ class Matrix():
 
     @property
     def T(self):
+        rows, cols = self.shape
+        m = [[] for _ in range(cols)]
+        for row in self.data:
+            for i, e in enumerate(row):
+                m[i].append(e)
+        self.data = m
 
 
 
