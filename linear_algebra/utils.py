@@ -8,9 +8,11 @@ class Matrix():
         return "\n".join(str(row) for row in self.data)
 
     def __getitem__(self, idx):
+        assert self.data, "data must be initialized"
         return self.data[idx]
 
     def __setitem__(self, idx, value):
+        assert self.data, "data must be initialized"
         self.data[idx] = value
 
     @classmethod
@@ -22,10 +24,21 @@ class Matrix():
         if copy:
             temp.data = data.copy()
         return temp
+    @classmethod
+    def zeros(cls, shape):
+        temp = cls(shape)
+        temp.data = [[0 for _ in range(shape[1])] for _ in range(shape[0])]
+        return temp
+    @classmethod
+    def randn(cls, shape):
+        temp = cls(shape)
+        temp.data = [[random.uniform(0, 1) for _ in range(shape[1])] for _ in range(shape[0])]
+        return temp
 
 #TODO make it with a new matrix
     @property
     def T(self):
+        assert self.data, "Data must be initialized!"
         rows, cols = self.shape
         m = [[] for _ in range(cols)]
         for row in self.data:
