@@ -18,7 +18,7 @@ class Matrix():
     @classmethod
     def from_data(cls, data, copy=True, strict=True):
         if strict:
-            assert all(type(val) == type(data[0]) for col in data for val in col), "Elements must be same type!"
+            assert all(type(val) == type(col[0]) for col in data for val in col), "Elements must be same type!"
         shape = (len(data), len(data[0]))
         temp = cls(shape)
         if copy:
@@ -34,7 +34,15 @@ class Matrix():
         temp = cls(shape)
         temp.data = [[random.uniform(0, 1) for _ in range(shape[1])] for _ in range(shape[0])]
         return temp
+    @classmethod
+    def eye(cls, shape):
+        pass
 
+    @classmethod
+    def ones(cls, shape)
+        temp = cls(shape)
+        temp.data = [[1 for _ in range(shape[1])] for _ in range(shape[0])]
+        return temp
 #TODO make it with a new matrix
     @property
     def T(self):
@@ -60,7 +68,7 @@ class Matrix():
             return temp_m
     def __radd__(self, x):
     #TODO check the type to be the same in the future
-        temp_m = Matrix(self.shape))
+        temp_m = Matrix(self.shape)
         temp_m.data = [[e + x for e in col] for col in self.data]
         return temp_m
     def __sub__(self, x):
