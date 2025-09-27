@@ -58,3 +58,50 @@ def sample_affine(p0: np.ndarray, A: np.ndarray, n=50, span=1.0):
     # compute points:
     points = p0 + grid @ A.T
     return points
+
+
+def plot_affine(
+    p0: np.ndarray,
+    A: np.ndarray,
+    n: int = 50,
+    span: float = 1.0,
+    ax=None,
+    show_frame=True,
+    alpha_surface=0.5,
+    subsample=5000,
+):
+    "Visualize the sampled manifold in 3D"
+    P = sample_affine(p0, A, n, span)
+    k = A.shape[1]
+    if not ax:
+        fig = plt.figure(figsize=(6, 6))
+        ax = fig.add_subplot(111, projection="3d")
+
+    # start plotting:
+
+    if k == 0:
+        ax.scatter(*p0)
+    elif k == 1:  # line
+        t = np.dot((P - p0), A[:, 0]) / np.dot(A[:, 0], A[:, 0])
+        order = np.argsort(t)
+        P = P[order]
+        # plot the line:
+        ax.plot(P[:, 0], P[:, 1], P[:, 2])
+        ax.scatter(*p0)
+    elif k == 2:
+        P = P.reshape((n, n, 3))
+        X, Y, Z = P[..., 0], P[..., 1], P[..., 2]
+        # plotting
+        ax.plot_surface(X, Y, Z, alpha=alpha_surface)
+        ax.scatter(*p0)
+
+    elif k == 3:
+        # subsample the points
+        step = max(1, len(P) // subsample)
+        sub = P[::step]
+        ax.scatter(sub[:, 0], sub[:, 1], sub[:, 2], s=2, alpha=0.5)
+        ax.scatter(*p0)
+    else:
+        raise ValueError(f"k must be 0, 1, 2, or 3 (got {k})")
+
+    return ax
