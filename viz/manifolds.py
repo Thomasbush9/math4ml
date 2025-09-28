@@ -105,3 +105,6 @@ def plot_affine(
         raise ValueError(f"k must be 0, 1, 2, or 3 (got {k})")
 
     return ax
+
+
+# TODO draw hyperplane, do for solving the system of lin eq
