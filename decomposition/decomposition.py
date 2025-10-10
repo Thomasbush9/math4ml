@@ -1,5 +1,6 @@
 import numbers
 
+import matplotlib.pyplot as plt
 import numpy as np
 
 
@@ -20,7 +21,7 @@ def eigen_decomposition(A: np.ndarray):
     return (V, S, np.linalg.inv(V))
 
 
-def PCA(A: np.ndarray, k: int = 2):
+def PCA(A: np.ndarray, k: int = 2, plotting: bool = False):
     # diagonalize the data:
     D = A - np.mean(A, axis=0)
     # covariance matrix of features:
@@ -42,11 +43,8 @@ def PCA(A: np.ndarray, k: int = 2):
         else:
             evr = eig_vals / total_var
             cum = np.cumsum(evr)
-            # Use leftmost index where cum >= k (with a tiny epsilon for k ~ 1.0)
             eps = 1e-12
             thr = min(max(float(k), eps), 1.0)  # clamp to (0,1]
-            # Find first index where cumulative >= thr
-            # Equivalent to np.searchsorted(cum, thr, side="left")
             j = int(np.argmax(cum >= thr)) if np.any(cum >= thr) else len(cum) - 1
             count = j + 1
         selected_eig_vals = eig_vals[:count]
@@ -62,8 +60,13 @@ def PCA(A: np.ndarray, k: int = 2):
             raise ValueError(f"k must be in [1, {eig_vals.shape[0]}], got {k}.")
         selected_eig_vals = eig_vals[:count]
         selected_eig_vect = eig_vect[:, :count]
+    if plotting:
+        plt.figure()
+        plt.plot(cum)
+        plt.axhline(k, color="r", label="90% variance")
+        plt.title("Cumulative plot PCA")
+        plt.show()
 
-    # 6) Project centered data
     proj_d = D @ selected_eig_vect
     return selected_eig_vals, selected_eig_vect, proj_d
 
