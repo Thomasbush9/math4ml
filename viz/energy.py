@@ -23,20 +23,54 @@ def compute_energy(A: np.ndarray, X, Y) -> np.ndarray:
     # check for symmetry
     if np.allclose(A, A.T):
         a11, a12, a22 = A[0, 0], A[0, 1], A[1, 1]
-        Z = a11 * X**2 + 2 * a12 * X * X + a22 * Y**2
+        Z = a11 * X**2 + 2 * a12 * X * Y + a22 * Y**2
     else:
         vect = np.stack([X, Y])
         Z = vect.T @ A @ vect
     return Z
 
 
-def plot_enegery(axes: tuple, cmap: str = "viridis", alpha=0.8):
-    """Plot the energy in a 3d space"""
+def plot_energy(
+    axes: tuple,
+    evecs: np.ndarray,
+    evals: np.ndarray,
+    *,
+    cmap: str = "viridis",
+    alpha: float = 0.8,
+    c_axis: float | None = None,
+) -> None:
+    """
+    3D surface + contour-at-z=0 + ellipse axes at level c_axis.
+    - evecs must be the matrix returned by eigh (columns are eigenvectors).
+    - evals must be the eigenvalues from eigh (ascending).
+    """
     X, Y, Z = axes
+    l1, l2 = float(evals[0]), float(evals[1])
+    v1, v2 = evecs[:, 0], evecs[:, 1]  # <-- columns, not rows
+
+    # choose a positive visible level for axis lengths
+    if c_axis is None:
+        Zpos = Z[Z > 0]
+        c_axis = float(np.median(Zpos)) if Zpos.size else float(Z.max() * 0.25)
+    assert c_axis > 0, "c_axis must be positive"
+
+    a1 = np.sqrt(c_axis / l1)
+    a2 = np.sqrt(c_axis / l2)
+
     fig = plt.figure()
     ax = fig.add_subplot(projection="3d")
     ax.plot_surface(X, Y, Z, cmap=cmap, alpha=alpha)
-    ax.contour(X, Y, Z, zdir="z", offset=0, cmap=cmap)
+
+    # project contours onto the base plane (z=0) for clarity
+    ax.contour(X, Y, Z, zdir="z", offset=0.0, cmap=cmap)
+
+    # draw ellipse axes in the base plane from a single origin
+    origin = np.array([0.0, 0.0, 0.0])
+    ax.quiver(*origin, a1 * v1[0], a1 * v1[1], 0.0)
+    ax.quiver(*origin, -a1 * v1[0], -a1 * v1[1], 0.0)
+    ax.quiver(*origin, a2 * v2[0], a2 * v2[1], 0.0)
+    ax.quiver(*origin, -a2 * v2[0], -a2 * v2[1], 0.0)
+
     plt.show()
 
 
@@ -48,10 +82,13 @@ if __name__ == "__main__":
     e_values = tuple(args.e)
 
     A = generate_spd_matrix(10, e_values, degrees=True)
+    _, evect = np.linalg.eigh(A)
+
     x = np.linspace(-3, 3, 100)
     y = np.linspace(-3, 3, 100)
 
     # we obtain a grid of points in x, y axes
     X, Y = np.meshgrid(x, y)
     Z = compute_energy(A, X, Y)
-    plot_enegery((X, Y, Z))
+
+    plot_energy((X, Y, Z), evect.T, e_values)
