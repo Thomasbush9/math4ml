@@ -34,6 +34,7 @@ def plot_energy(
     axes: tuple,
     evecs: np.ndarray,
     evals: np.ndarray,
+    gradient: np.ndarray = None,
     *,
     cmap: str = "viridis",
     alpha: float = 0.8,
@@ -70,6 +71,20 @@ def plot_energy(
     ax.quiver(*origin, -a1 * v1[0], -a1 * v1[1], 0.0)
     ax.quiver(*origin, a2 * v2[0], a2 * v2[1], 0.0)
     ax.quiver(*origin, -a2 * v2[0], -a2 * v2[1], 0.0)
+    # plot the gradient on the contour plot
+    if gradient is not None:
+        skip = (slice(None, None, 5), slice(None, None, 5))  # plot every 5th vector
+        ax.quiver(
+            X[skip],
+            Y[skip],
+            np.zeros_like(Z[skip]),
+            gradient[0][skip],
+            gradient[1][skip],
+            np.zeros_like(Z[skip]),
+            color="red",
+            length=0.5,
+            normalize=True,
+        )
 
     plt.show()
 
@@ -90,5 +105,9 @@ if __name__ == "__main__":
     # we obtain a grid of points in x, y axes
     X, Y = np.meshgrid(x, y)
     Z = compute_energy(A, X, Y)
+    # compute the gradient:
+    V = np.stack([X, Y]).reshape((2, X.shape[-1] ** 2))
+    gradient = (2 * (A @ V)).reshape((2, X.shape[-1], Y.shape[-1]))  # dE/dx = 2Ax
+    Gx, Gy = gradient[0], gradient[1]
 
-    plot_energy((X, Y, Z), evect.T, e_values)
+    plot_energy((X, Y, Z), evect.T, e_values, gradient)
